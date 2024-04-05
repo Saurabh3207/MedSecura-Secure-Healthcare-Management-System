@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import LoginImg from "../Assets/login-img.jpg";
 import Mobotp from "../Assets/otp.png";
-import { Checkbox, Input } from "@nextui-org/react";
+import { Checkbox} from "@nextui-org/react";
 import { EyeFilledIcon } from "./EyeFilledIcon";
 import { EyeSlashFilledIcon } from "./EyeSlashFilledIcon";
 
@@ -72,11 +72,15 @@ const Login = () => {
 </div>
 
 <div className="flex justify-between mb-2">
-  <a href="#" className="text-xs text-purple-600 hover:underline">
-    Forget Password?
+  <a href="#" className="text-sm text-purple-600 hover:underline">
+    Forgot Password?
   </a>
-  <Checkbox color="success">Remember ME</Checkbox>
+  <Checkbox color="secondary" className="text-sm">
+    <span>Remember Me</span>
+  </Checkbox>
 </div>
+
+
             <div className="mt-6">
               <button className="w-full px-4 py-2 tracking-wide text-white transition-colors duration-200 transform bg-purple-700 rounded-md hover:bg-purple-600 focus:outline-none focus:bg-purple-600">
                 Login
