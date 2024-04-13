@@ -32,3 +32,5 @@ export const EyeSlashFilledIcon = (props) => (
     />
   </svg>
 );
+
+export default EyeSlashFilledIcon;

@@ -20,3 +20,5 @@ export const EyeFilledIcon = (props) => (
     />
   </svg>
 );
+
+export default EyeFilledIcon;

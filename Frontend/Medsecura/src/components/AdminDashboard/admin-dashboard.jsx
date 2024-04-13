@@ -1,7 +1,7 @@
 // src/components/Navbar.js
 import React from 'react';
 
-const Navbar = () => {
+const AdminDashboard = () => {
   return (
     <nav className="bg-gray-800 text-white flex justify-between p-4">
       {/* Logo or Brand */}
@@ -18,4 +18,4 @@ const Navbar = () => {
   );
 };
 
-export default Navbar;
+export default AdminDashboard;
