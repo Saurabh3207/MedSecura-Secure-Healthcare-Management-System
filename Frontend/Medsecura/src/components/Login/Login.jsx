@@ -4,8 +4,9 @@ import Mobotp from "../Assets/otp.png";
 import { Checkbox} from "@nextui-org/react";
 import { EyeFilledIcon } from "./EyeFilledIcon";
 import { EyeSlashFilledIcon } from "./EyeSlashFilledIcon";
-import axios from 'axios'; // Import Axios
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import axios from 'axios'; 
+import { useNavigate } from 'react-router-dom'; 
+import { toast } from "react-toastify"; 
 
 const Login = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -32,13 +33,8 @@ const Login = () => {
       const data = response.data;
 
       if (response.status === 200) {
-        const { token, role } = data;
-        localStorage.setItem('token', token); 
-        localStorage.setItem('role', role);
-        // Successfully logged in
-        console.log(data);
-        // Redirect to OTP verification page
-        navigate('/otp-verification', { state: { email, role } });
+        // Redirect to OTP verification page after successful login
+        navigate('/otp-verification', { state: { email, role: data.role } });
       } else {
         setError(data.error || 'Something went wrong. Please try again.');
       }
@@ -49,7 +45,7 @@ const Login = () => {
       setLoading(false);
     }
   };
-
+  
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
       <div className="flex flex-col lg:flex-row max-w-4xl w-full mx-4 lg:mx-auto shadow-violet">

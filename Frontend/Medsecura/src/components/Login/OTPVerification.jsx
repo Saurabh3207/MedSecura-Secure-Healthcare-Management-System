@@ -38,9 +38,10 @@ const OTPVerification = () => {
       const data = response.data;
 
       if (response.status === 200) {
-        setVerified(true);
-        alert('OTP Verified! Redirecting to dashboard...');
-
+        // Set token and role in local storage after successful OTP verification
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('role', role);
+        // Redirect to role-specific dashboard
         switch (role) {
           case 'admin':
             navigate('/admin/dashboard', { replace: true });
