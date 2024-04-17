@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import axios from 'axios';
 import { useNavigate, useLocation } from 'react-router-dom';
 import LoginImg from "../Assets/login-img.jpg";
+import { toast } from "react-toastify";
 
 const OTPVerification = () => {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -34,10 +35,12 @@ const OTPVerification = () => {
         email,
         otp: enteredOtp,
       });
-
+      console.log(response)
       const data = response.data;
 
       if (response.status === 200) {
+        toast.success('OTP verified successfully!');
+        setVerified(true);
         // Set token and role in local storage after successful OTP verification
         localStorage.setItem('token', data.token);
         localStorage.setItem('role', role);
@@ -59,11 +62,11 @@ const OTPVerification = () => {
             navigate('/', { replace: true });
         }
       } else {
-        setError(data.error || 'Failed to verify OTP. Please try again.');
+       toast.error(data.error || 'Failed to verify OTP. Please try again.');
       }
     } catch (error) {
       console.error('OTP verification error:', error);
-      setError('Failed to verify OTP. Please try again.');
+      toast.error('Failed to verify OTP. Please try again.');
     } finally {
       setLoading(false);
     }

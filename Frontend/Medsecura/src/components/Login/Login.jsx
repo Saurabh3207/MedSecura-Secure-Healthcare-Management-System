@@ -22,7 +22,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+  
 
     try {
       const response = await axios.post('http://localhost:3000/auth/login', {
@@ -35,17 +35,31 @@ const Login = () => {
       if (response.status === 200) {
         // Redirect to OTP verification page after successful login
         navigate('/otp-verification', { state: { email, role: data.role } });
+        toast.success('Login successful. Please verify OTP to continue.');
       } else {
-        setError(data.error || 'Something went wrong. Please try again.');
+        toast.error(data.error || 'Something went wrong. Please try again.');
       }
-    } catch (error) {
+    } 
+    catch (error) {
       console.error('Login error:', error);
-      setError('Something went wrong. Please try again.');
+
+      if (error.response && error.response.status === 401) {
+        toast.error('Invalid email or password.');
+      } else if (error.response) {
+        
+        toast.error('Server error. Please try again later.');
+      } else if (error.request) {
+    
+        toast.error('Internal Server error.');
+      } else {
+   
+        toast.error('Something went wrong. Please try again later.');
+      }
     } finally {
       setLoading(false);
     }
   };
-  
+
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
       <div className="flex flex-col lg:flex-row max-w-4xl w-full mx-4 lg:mx-auto shadow-violet">
