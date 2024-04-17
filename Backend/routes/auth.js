@@ -28,9 +28,8 @@ function generateOTP() {
   
   // Set OTP expiration time to 2 minutes (120 seconds)
   const expirationTime = Date.now() + (2 * 60 * 1000); // 2 minutes in milliseconds
-  otpStore[otp] = expirationTime;
 
-  return otp;
+  return { otp, expirationTime };
 }
 
 const otpStore = {};
@@ -65,9 +64,9 @@ router.post('/login', limiter, async (req, res) => {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    const otp = generateOTP();
+    const { otp, expirationTime } = generateOTP();
 
-    otpStore[email] = otp;
+    otpStore[email] = { otp, expirationTime };
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
@@ -78,26 +77,26 @@ router.post('/login', limiter, async (req, res) => {
     
     await sendEmail(mailOptions);
 
-     // Generate JWT token
-     const token = jwt.sign({ email, role }, JWT_SECRET, { expiresIn: '1h' });
-
-     res.status(200).json({ message: 'OTP sent successfully', token, role });
-   } catch (error) {
-     console.error('Login error:', error);
-     res.status(500).json({ error: 'Internal server error' });
-   }
- });
+    res.status(200).json({ message: 'OTP sent successfully', email, role });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 
 router.post('/verify-otp', async (req, res) => {
   const { email, otp } = req.body;
 
   try {
-    const storedOTPExpiration = otpStore[otp];
+    const storedOTP = otpStore[email];
 
-    if (storedOTPExpiration && storedOTPExpiration > Date.now()) {
+    if (storedOTP && storedOTP.expirationTime > Date.now() && storedOTP.otp === otp) {
       // OTP is valid
-      res.status(200).json({ message: 'OTP verification successful' });
+      const role = storedOTP.role;
+      // Generate JWT token
+      const token = jwt.sign({ email, role }, JWT_SECRET, { expiresIn: '1h' });
+      res.status(200).json({ message: 'OTP verification successful', token, role });
     } else {
       // OTP is invalid or expired
       res.status(401).json({ error: 'Invalid or expired OTP' });
