@@ -7,6 +7,7 @@ import { EyeSlashFilledIcon } from "./EyeSlashFilledIcon";
 import axios from 'axios'; 
 import { useNavigate } from 'react-router-dom'; 
 import { toast } from "react-toastify"; 
+import { Link } from 'react-router-dom';
 
 const Login = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -70,6 +71,7 @@ const Login = () => {
           <h1 className="text-3xl font-semibold text-center text-purple-700 uppercase mb-6">
             Sign in
           </h1>
+       
           <form className="mt-6" onSubmit={handleSubmit}>
             <div className="mb-2 relative">
               <label
@@ -123,9 +125,9 @@ const Login = () => {
             </div>
 
             <div className="flex justify-between mb-2">
-              <a href="#" className="text-sm text-purple-600 hover:underline">
-                Forgot Password?
-              </a>
+            <Link to="/forgot-password" className="text-sm text-purple-600 hover:underline">
+    Forgot Password?
+  </Link>
               <Checkbox color="secondary" className="text-sm">
                 <span>Remember Me</span>
               </Checkbox>

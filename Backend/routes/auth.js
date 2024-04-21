@@ -18,7 +18,7 @@ router.use(helmet());
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
-function generateOTP() {
+function generateOTP(role) {
   const otpLength = 6;
   const otpChars = '0123456789';
   let otp = '';
@@ -29,7 +29,7 @@ function generateOTP() {
   // Set OTP expiration time to 2 minutes (120 seconds)
   const expirationTime = Date.now() + (2 * 60 * 1000); // 2 minutes in milliseconds
 
-  return { otp, expirationTime };
+  return { otp, expirationTime, role };
 }
 
 const otpStore = {};
@@ -39,19 +39,19 @@ router.post('/login', limiter, async (req, res) => {
 
   try {
     let user = await Admin.findOne({ where: { email } });
-    let role = 'admin';
+    let userType = 'admin';
 
     if (!user) {
       user = await Receptionist.findOne({ where: { email } });
-      role = 'receptionist';
+      userType = 'receptionist';
     }
     if (!user) {
       user = await Doctor.findOne({ where: { email } });
-      role = 'doctor';
+      userType = 'doctor';
     }
     if (!user) {
       user = await Patient.findOne({ where: { email } });
-      role = 'patient';
+      userType = 'patient';
     }
 
     if (!user) {
@@ -64,9 +64,9 @@ router.post('/login', limiter, async (req, res) => {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    const { otp, expirationTime } = generateOTP();
+    const { otp, expirationTime, role } = generateOTP(userType);
 
-    otpStore[email] = { otp, expirationTime };
+    otpStore[email] = { otp, expirationTime, role };
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
@@ -91,21 +91,34 @@ router.post('/verify-otp', async (req, res) => {
   try {
     const storedOTP = otpStore[email];
 
-    if (storedOTP && storedOTP.expirationTime > Date.now() && storedOTP.otp === otp) {
-      // OTP is valid
-      const role = storedOTP.role;
-      // Generate JWT token
-      const token = jwt.sign({ email, role }, JWT_SECRET, { expiresIn: '1h' });
-      res.status(200).json({ message: 'OTP verification successful', token, role });
-    } else {
-      // OTP is invalid or expired
-      res.status(401).json({ error: 'Invalid or expired OTP' });
+    if (!storedOTP) {
+      // If no OTP is stored for the given email
+      return res.status(401).json({ error: 'No OTP found for this email' });
     }
+
+    if (storedOTP.expirationTime < Date.now()) {
+      // If the stored OTP has expired
+      return res.status(401).json({ error: 'OTP has expired' });
+    }
+
+    if (storedOTP.otp !== otp) {
+      // If the provided OTP does not match the stored OTP
+      return res.status(401).json({ error: 'Incorrect OTP' });
+    }
+
+    // If all checks pass, OTP is verified successfully
+    const { role } = storedOTP;
+    // Generate JWT token
+    const token = jwt.sign({ email, role }, JWT_SECRET, { expiresIn: '1h' });
+    // Remove the OTP from the store
+    delete otpStore[email];
+    res.status(200).json({ message: 'OTP verification successful', token, role });
   } catch (error) {
     console.error('OTP verification error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
 
 
 router.post('/check-username', [
@@ -134,5 +147,95 @@ router.post('/check-username', [
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+router.post('/forgot-password', async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await Admin.findOne({ where: { email } })
+      || await Receptionist.findOne({ where: { email } })
+      || await Doctor.findOne({ where: { email } })
+      || await Patient.findOne({ where: { email } });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found with this email' });
+    }
+
+    const { otp, expirationTime } = generateOTP(user.role);
+
+    otpStore[email] = { otp, expirationTime };
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'One-Time Password (OTP) Verification for Medsecura',
+      text: `Dear User,\n\nWelcome to Medsecura!\n\nTo reset your password, please use the following One-Time Password (OTP) to complete the verification process:\n\n${otp}\n\nThis OTP is valid for 2 minutes.\n\nIf you did not request this OTP or have any concerns, please contact our support team.\n\nBest regards,\nMedsecura Team`
+    };
+
+    await sendEmail(mailOptions);
+
+    res.status(200).json({ message: 'OTP sent successfully', email });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.post('/reset-password', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    // Find the user by email across all user types
+    let user = await Admin.findOne({ where: { email } }) ||
+               await Receptionist.findOne({ where: { email } }) ||
+               await Doctor.findOne({ where: { email } }) ||
+               await Patient.findOne({ where: { email } });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found with this email' });
+    }
+
+    // Update user's password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await user.update({ password: hashedPassword });
+
+    // Remove the OTP from the store
+    delete otpStore[email];
+
+    res.status(200).json({ message: 'Password reset successful' });
+  } catch (error) {
+    console.error('Password reset error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
+router.post('/forgot-password-verify-otp', async (req, res) => {
+  const { email, otp } = req.body;
+
+  try {
+    const storedOTP = otpStore[email];
+
+    if (!storedOTP) {
+      return res.status(401).json({ error: 'No OTP found for this email' });
+    }
+
+    if (storedOTP.expirationTime < Date.now()) {
+      return res.status(401).json({ error: 'OTP has expired' });
+    }
+
+    if (storedOTP.otp !== otp) {
+      return res.status(401).json({ error: 'Incorrect OTP' });
+    }
+
+    res.status(200).json({ message: 'OTP verified successfully', email });
+  } catch (error) {
+    console.error('Forgot password OTP verification error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
+
 
 module.exports = router;
