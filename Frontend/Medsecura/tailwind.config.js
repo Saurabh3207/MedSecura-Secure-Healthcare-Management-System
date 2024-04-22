@@ -10,9 +10,13 @@ export default {
   theme: {
     extend: {
       boxShadow: {
-        'violet': '0 0 10px rgba(128, 0, 128, 0.5)', // violet shadow for buttons and inputs focus state
-      }
+        'violet': '0 0 10px rgba(128, 0, 128, 0.5)',
+         // violet shadow for buttons and inputs focus state
+      },
+      colors: {
+        CustomTeal : '#00c7d7',
     },
+  },
   },
   darkMode: "class",
   plugins: [nextui()]
