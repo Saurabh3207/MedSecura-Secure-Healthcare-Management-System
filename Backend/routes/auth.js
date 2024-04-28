@@ -85,7 +85,6 @@ router.post('/login', limiter, async (req, res) => {
   }
 });
 
-
 router.post('/verify-otp', async (req, res) => {
   const { email, otp } = req.body;
 
@@ -119,8 +118,6 @@ router.post('/verify-otp', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
-
-
 
 router.post('/check-username', [
   body('username').isLength({ min: 5 }).withMessage('Username must be at least 5 characters long')
@@ -210,7 +207,6 @@ router.post('/reset-password', async (req, res) => {
   }
 });
 
-
 router.post('/forgot-password-verify-otp', async (req, res) => {
   const { email, otp } = req.body;
 
@@ -236,6 +232,178 @@ router.post('/forgot-password-verify-otp', async (req, res) => {
   }
 });
 
+router.post('/add-patient',async(req,res)=>{
+  const details = req.body;
+  /* 
+  details = {
+    name: "John Doe",
+    middleName: "Smith",
+    lastName: "Doe",
+    dateOfBirth: "1990-01-01",
+    gender: "male/female",
+    email: "ex@gmail.com",
+    ABHAID: "1234567890",
+    homeAddress: "123, Main Street, City, State, Country",
+    bloodGroup: "A+",
+    maritalStatus: "single/married",
+    occupation: "Engineer",
+    Religion: "Hindu"
+  }
+   */
+  try {
+
+    // check if patient already exists
+    const patientExists = await Patient.findOne({ where: { email: details.email } });
+    if (patientExists) {
+      return res.status(409).json({ error: 'Patient with this email already exists' });
+    }
+    // create default password for the patient
+    details.password =  Math.random().toString(36).slice(-8);
+    // insert patient details into the database
+    const patient = await Patient.create(details);
+
+    if(!patient){
+      return res.status(500).json({ error: 'Error adding patient' });
+    }
+    // send email to the patient with the default password
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: details.email,
+      subject: 'Welcome to Medsecura!',
+      text: `Dear ${details.name},\n\nWelcome to Medsecura!\n\nYour account has been successfully created. Please use the following credentials to log in to your account:\n\nEmail: ${details.email}\nPassword: ${details.password}\n\nPlease remember to change your password after logging in for the first time.\n\nBest regards,\nMedsecura Team`
+    };
+
+    await sendEmail(mailOptions);
+
+    res.status(200).json({ message: 'Patient added successfully', patient });
+  }catch(error){
+    console.error('Error adding patient:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+})
+
+router.post('/add-doctor',async(req,res)=>{
+  const details = req.body;
+  /* 
+  details = {
+     name: "",
+    email: "",
+    specialty: "",
+    contactNumber: "",
+    address: "",
+    qualification: "",
+}*/
+  try{
+    // check if doctor already exists
+    const doctorExists = await Doctor.findOne({ where: { email: details.email } });
+    if (doctorExists) {
+      return res.status(409).json({ error: 'Doctor with this email already exists' });
+    }
+    // create default password for the doctor
+    details.password =  Math.random().toString(36).slice(-8);
+    // insert doctor details into the database
+    const doctor = await Doctor.create(details);
+
+    if(!doctor){
+      return res.status(500).json({ error: 'Error adding doctor' });
+    }
+    // send email to the doctor with the default password
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: details.email,
+      subject: 'Welcome to Medsecura!',
+      text: `Dear ${details.name},\n\nWelcome to Medsecura!\n\nYour account has been successfully created. Please use the following credentials to log in to your account:\n\nEmail: ${details.email}\nPassword: ${details.password}\n\nPlease remember to change your password after logging in for the first time.\n\nBest regards,\nMedsecura Team`
+    };
+
+    await sendEmail(mailOptions);
+
+    res.status(200).json({ message: 'Doctor added successfully', doctor });
+
+  }catch(error){
+    console.error('Error adding doctor:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+
+});
+
+router.get('/get-patients',async(req,res)=>{
+  try{
+    const patients = await Patient.findAll();
+    // do not return the password field
+    patients.forEach(patient => {
+      delete patient.dataValues.password;
+      delete patient.dataValues.otp;
+    });
+
+    res.status(200).json({ patients });
+  }catch(error){
+    console.error('Error getting patients:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+})
+
+router.get('/get-doctors',async(req,res)=>{
+  try{
+    const doctors = await Doctor.findAll();
+    // do not return the password field
+    doctors.forEach(doctor => {
+      delete doctor.dataValues.password;
+      delete doctor.dataValues.otp;
+    });
+
+    res.status(200).json({ doctors });
+  }catch(error){
+    console.error('Error getting doctors:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+})
+
+router.post('/get-patient',async(req,res)=>{
+  const { email } = req.body;
+  try{
+    const patient = await Patient.findOne({ where: { email } });
+
+    if (!patient) {
+      return res.status(404).json({ error: 'Patient not found' });
+    }
+    // do not return the password field
+    delete patient.dataValues.password;
+    delete patient.dataValues.otp;
+
+    res.status(200).json({ patient });
+}catch(error){
+  console.error('Error getting patient:', error);
+  res.status(500).json({ error: 'Internal server error' });
+}
+})
+
+router.put('/update-patient',async(req,res)=>{
+
+  const details = req.body;
+  /* 
+  details = {
+    id: 1,
+    email:"xyz@gmail.com"
+    name: "John Doe",
+    middleName: "Smith",
+    lastName: "Doe",
+    dateOfBirth: "1990-01-01",
+})
+*/
+  try{
+    const patient = await Patient.findOne({ where: { email: details.email } });
+
+    if (!patient) {
+      return res.status(404).json({ error: 'Patient not found' });
+    }
+
+    await patient.update(details);
+
+    res.status(200).json({ message: 'Patient updated successfully', patient });
+  }catch(error){
+    console.error('Error updating patient:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 
 router.post('/add-patient', async (req, res) => {
   const { name, middleName, lastName, dob, gender, email, abhaId, homeAddress, bloodGroup, maritalStatus, occupation, religion, profileImage } = req.body;
@@ -292,5 +460,5 @@ router.post('/add-patient', async (req, res) => {
   }
 });
 
-
+})
 module.exports = router;
