@@ -8,7 +8,6 @@ const { sendEmail } = require('../nodemailer');
 const rateLimit = require("express-rate-limit");
 const helmet = require("helmet");
 
-
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
@@ -236,26 +235,20 @@ router.post('/forgot-password-verify-otp', async (req, res) => {
   }
 });
 
-
 router.post('/add-patient', async (req, res) => {
-  const { name, middleName, lastName, dob, gender, email, abhaId, homeAddress, bloodGroup, maritalStatus, occupation, religion, profileImage } = req.body;
+  const { name, middleName, lastName, dob, gender, email, abhaId, contactNumber, homeAddress, bloodGroup, maritalStatus, occupation, religion, age } = req.body;
 
   try {
-    // Extract the user's role from the JWT token provided in the request headers
-    const token = req.headers.authorization.split(' ')[1];
-    const decodedToken = jwt.verify(token, JWT_SECRET);
-    const userRole = decodedToken.role;
-
-    // Check if the user's role is either admin or receptionist
-    if (userRole !== 'admin' && userRole !== 'receptionist') {
-      return res.status(403).json({ error: 'Unauthorized access' });
+    // Validate if all required fields are present
+    if (!name || !middleName || !lastName || !dob || !gender || !email || !abhaId || !contactNumber || !occupation || !age) {
+      return res.status(400).json({ error: 'All required fields must be provided' });
     }
 
-    // Generate a random password for the patient
-    const generatedPassword = Math.random().toString(36).slice(-8); // Example of generating an 8-character random password
+    // Generate a default password for the patient
+    const defaultPassword = Math.random().toString(36).slice(-8); // Example of generating an 8-character random password
 
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(generatedPassword, 10);
+    // Hash the default password
+    const hashedPassword = await bcrypt.hash(defaultPassword, 10);
 
     // Create the new patient record in the database
     const newPatient = await Patient.create({
@@ -267,12 +260,13 @@ router.post('/add-patient', async (req, res) => {
       email,
       password: hashedPassword, // Store the hashed password in the database
       abhaId,
+      contactNumber,
       homeAddress,
       bloodGroup,
       maritalStatus,
       occupation,
       religion,
-      profileImage
+      age
     });
 
     // Send an email to the patient with their login credentials
@@ -280,7 +274,7 @@ router.post('/add-patient', async (req, res) => {
       from: process.env.EMAIL_USER,
       to: email,
       subject: 'Welcome to Medsecura - Your Login Credentials',
-      text: `Dear ${name},\n\nWelcome to Medsecura!\n\nYour login credentials are as follows:\n\nEmail: ${email}\nPassword: ${generatedPassword}\n\nPlease login to your account using the provided credentials.\n\nBest regards,\nMedsecura Team`
+      text: `Dear ${name},\n\nWelcome to Medsecura!\n\nYour login credentials are as follows:\n\nUsername (Email): ${email}\nPassword: ${defaultPassword}\n\nPlease login to your account using the provided credentials.\n\nBest regards,\nMedsecura Team`
     };
 
     await sendEmail(mailOptions);

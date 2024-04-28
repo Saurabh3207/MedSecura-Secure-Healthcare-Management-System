@@ -18,7 +18,7 @@ const Admin = sequelize.define('Admin', {
     allowNull: false
   },
   otp: {
-    type: DataTypes.STRING // Add OTP field
+    type: DataTypes.STRING 
   }
 }, {
   tableName: 'admins'
@@ -41,7 +41,7 @@ const Receptionist = sequelize.define('Receptionist', {
     allowNull: false
   },
   otp: {
-    type: DataTypes.STRING // Add OTP field
+    type: DataTypes.STRING 
   }
 }, {
   tableName: 'receptionists'
@@ -64,7 +64,7 @@ const Doctor = sequelize.define('Doctor', {
     allowNull: false
   },
   otp: {
-    type: DataTypes.STRING // Add OTP field
+    type: DataTypes.STRING 
   }
 }, {
   tableName: 'doctors'
@@ -87,7 +87,7 @@ const Patient = sequelize.define('Patient', {
     allowNull: false
   },
   otp: {
-    type: DataTypes.STRING // Add OTP field
+    type: DataTypes.STRING 
   }
 }, {
   tableName: 'patients'

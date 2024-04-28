@@ -48,6 +48,10 @@ ADD COLUMN occupation VARCHAR(255),
 ADD COLUMN religion VARCHAR(50),
 ADD COLUMN profileImage VARCHAR(255);
 
+alter Table patients drop COLUMN profileImage;
+ALTER TABLE patients
+ADD COLUMN age INT AFTER religion,
+ADD COLUMN contact VARCHAR(20) AFTER age;
 
 ALTER TABLE patients
 MODIFY COLUMN password VARCHAR(255) NOT NULL;
