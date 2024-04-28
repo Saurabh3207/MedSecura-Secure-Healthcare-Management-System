@@ -357,5 +357,53 @@ router.get('/get-doctors',async(req,res)=>{
   }
 })
 
+router.post('/get-patient',async(req,res)=>{
+  const { email } = req.body;
+  try{
+    const patient = await Patient.findOne({ where: { email } });
 
+    if (!patient) {
+      return res.status(404).json({ error: 'Patient not found' });
+    }
+    // do not return the password field
+    delete patient.dataValues.password;
+    delete patient.dataValues.otp;
+
+    res.status(200).json({ patient });
+}catch(error){
+  console.error('Error getting patient:', error);
+  res.status(500).json({ error: 'Internal server error' });
+}
+})
+
+router.put('/update-patient',async(req,res)=>{
+
+  const details = req.body;
+  /* 
+  details = {
+    id: 1,
+    email:"xyz@gmail.com"
+    name: "John Doe",
+    middleName: "Smith",
+    lastName: "Doe",
+    dateOfBirth: "1990-01-01",
+})
+*/
+  try{
+    const patient = await Patient.findOne({ where: { email: details.email } });
+
+    if (!patient) {
+      return res.status(404).json({ error: 'Patient not found' });
+    }
+
+    await patient.update(details);
+
+    res.status(200).json({ message: 'Patient updated successfully', patient });
+  }catch(error){
+    console.error('Error updating patient:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+
+
+})
 module.exports = router;
