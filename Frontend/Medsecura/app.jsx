@@ -38,7 +38,6 @@ function App() {
         <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/forgot-password-verification" element={<ForgotPasswordOTPVerification setIsOtpVerified={setIsOtpVerified} />} />
-
             <Route path="/otp-verification" element={<OTPVerification />} />
             <Route path="/forgot-password" element={<Forgotpassword />} />
             {isOtpVerified && <Route path="/reset-password" element={<Resetpassword />} />}

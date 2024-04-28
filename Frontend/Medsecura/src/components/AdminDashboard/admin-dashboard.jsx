@@ -1,5 +1,5 @@
 // src/components/Navbar.js
-import React from "react";
+import React ,{useState} from "react";
 import {
   Navbar,
   NavbarBrand,
@@ -26,12 +26,22 @@ import UpdateDoctorIcon from "../Assets/ICONS//updatedoctor.png";
 import AdminUpdateProfile from "../Assets/ICONS/updateprofile.jpg";
 import AddReceptionist from "../Assets/ICONS/Add receptionist.png";
 import ViewReceptionist from "../Assets/ICONS/ViewReceptionist.jpg";
-
+import AddPatientModal from "./Modals/Patient/AddPatientModal.jsx";
 const AdminDashboard = () => {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("role");
     window.location.href = "/login";
+  };
+
+  const [isAddPatientModalOpen, setAddPatientModalOpen] = useState(false);
+
+  const handleAddPatientClick = () => {
+    setAddPatientModalOpen(true);
+  };
+
+  const handleAddPatientModalClose = () => {
+    setAddPatientModalOpen(false);
   };
 
   return (
@@ -137,10 +147,11 @@ const AdminDashboard = () => {
     <img src={ViewPatient} alt="View Patients" style={{ width: '70px', height: '70px', marginBottom: '8px' }} />
     <h1 className="text-lg font-semibold" style={{ margin: '0' }}>View Patients</h1>
   </button>
-  <button className="text-center flex flex-col items-center" onClick={() => handleIconClick('AddPatients')}>
-    <img src={AddPatient} alt="Add Patients" style={{ width: '70px', height: '70px', marginBottom: '8px' }} />
-    <h1 className="text-lg font-semibold" style={{ margin: '0' }}>Add Patients</h1>
-  </button>
+  <button className="text-center flex flex-col items-center" onClick={handleAddPatientClick}>
+            <img src={AddPatient} alt="Add Patients" style={{ width: '70px', height: '70px', marginBottom: '8px' }} />
+            <h1 className="text-lg font-semibold" style={{ margin: '0' }}>Add Patients</h1>
+          </button>
+
   <button className="text-center flex flex-col items-center" onClick={() => handleIconClick('UpdatePatients')}>
     <img src={UpdatePatient} alt="Update Patients" style={{ width: '70px', height: '70px', marginBottom: '8px' }} />
     <h1 className="text-lg font-semibold" style={{ margin: '0' }}>Update Patients</h1>
@@ -192,6 +203,9 @@ const AdminDashboard = () => {
  
 </div>
       </div>
+
+      <AddPatientModal isOpen={isAddPatientModalOpen} onClose={handleAddPatientModalClose} size="5xl" />
+
     </div>
   );
 };
