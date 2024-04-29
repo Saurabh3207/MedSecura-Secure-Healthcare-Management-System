@@ -45,4 +45,21 @@ CREATE TABLE if not exists patients (
     updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS appointments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    patientId INTEGER NOT NULL,
+    doctorId INTEGER NOT NULL,
+    appointmentDate DATETIME NOT NULL,
+    description TEXT,
+    nextVisitDate DATETIME,
+    status TEXT DEFAULT 'Pending' CHECK(status IN ('Pending', 'Completed')),
+    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (patientId) REFERENCES patients(id),
+    FOREIGN KEY (doctorId) REFERENCES doctors(id)
+);
+
+
+
 COMMIT;
+

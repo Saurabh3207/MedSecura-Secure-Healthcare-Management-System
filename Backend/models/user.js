@@ -176,9 +176,59 @@ const Patient = sequelize.define(
 		tableName: "patients",
 	}
 );
+// Appointment Model
+const Appointment = sequelize.define(
+    "Appointment",
+    {
+        id: {
+            type: DataTypes.INTEGER,
+            primaryKey: true,
+            autoIncrement: true,
+        },
+        patient_id: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+        },
+        doctor_id: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+        },
+        appointment_date: {
+            type: DataTypes.DATE,
+            allowNull: false,
+        },
+        description: {
+            type: DataTypes.TEXT,
+        },
+        next_visit_date: {
+            type: DataTypes.DATE,
+        },
+        status: {
+            type: DataTypes.ENUM("Pending", "Completed"),
+            defaultValue: "Pending",
+        },
+        created_at: {
+            type: DataTypes.DATE,
+            allowNull: false,
+            defaultValue: DataTypes.NOW,
+        },
+        updated_at: {
+            type: DataTypes.DATE,
+            allowNull: false,
+            defaultValue: DataTypes.NOW,
+        },
+    },
+    {
+        tableName: "appointments",
+        timestamps: true, // This option automatically adds createdAt and updatedAt fields
+        underscored: true, // This option converts camelCase column names to snake_case
+    }
+);
+
 
 module.exports = {
 	Admin,
 	Doctor,
+	Appointment,
 	Patient,
 };

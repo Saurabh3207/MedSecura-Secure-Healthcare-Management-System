@@ -3,7 +3,7 @@ const router = express.Router();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { body, validationResult } = require("express-validator");
-const { Admin, Doctor, Patient } = require("../models/user");
+const { Admin, Doctor, Patient ,Appointment} = require("../models/user");
 const { sendEmail } = require("../nodemailer");
 const rateLimit = require("express-rate-limit");
 const helmet = require("helmet");
@@ -40,6 +40,10 @@ router.post("/login", limiter, async (req, res) => {
 	let userType = "";
 	try {
 		let user = await Admin.findOne({ where: { email } });
+		if (user) {
+			userType = "admin";
+
+		}
 
 		if (!user) {
 			user = await Doctor.findOne({ where: { email } });
@@ -481,5 +485,27 @@ router.delete("/delete-doctor", async (req, res) => {
 		res.status(500).json({ error: "Internal server error" });
 	}
 });
+
+
+
+router.post('/add-appointment', async (req, res) => {
+    const { patientId, doctorId, appointmentDate, description, nextVisitDate } = req.body;
+
+    try {
+        // Create the appointment
+        const appointment = await Appointment.create({
+            patientId,
+            doctorId,
+            appointmentDate,
+            description,
+            nextVisitDate
+        });
+
+        res.status(200).json({ message: 'Appointment added successfully', appointment });
+    } catch (error) {
+        console.error('Error adding appointment:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}); 
 
 module.exports = router;
