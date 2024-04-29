@@ -507,7 +507,15 @@ router.get("/get-appointments", async (req, res) => {
 	try {
 		const appointments = await Appointment.findAll();
 
-		res.status(200).json({ appointments });
+		// Format appointment_date before sending the response
+		const formattedAppointments = appointments.map(appointment => {
+			return {
+				...appointment.toJSON(),
+				appointment_date: appointment.appointment_date.toDateString() // Format date as "YYYY-MM-DD"
+			};
+		});
+
+		res.status(200).json({ appointments: formattedAppointments });
 	} catch (error) {
 		console.error("Error getting appointments:", error);
 		res.status(500).json({ error: "Internal server error" });

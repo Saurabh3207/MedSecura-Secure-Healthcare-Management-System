@@ -16,22 +16,22 @@ import {
 } from "@nextui-org/react";
 import axios from "axios";
 
-const ViewappointmentModal = ({ isOpen, onClose, size }) => {
-	const [appointments, setappointments] = useState([]);
+const ViewAppointmentModal = ({ isOpen, onClose, size }) => {
+	const [appointments, setAppointments] = useState([]);
 	const [searchTerm, setSearchTerm] = useState("");
 
 	useEffect(() => {
 		if (isOpen) {
 			// Fetch appointment data from the backend API
-			const fetchappointments = async () => {
+			const fetchAppointments = async () => {
 				try {
 					const response = await axios.get("http://localhost:3000/auth/get-appointments");
-					setappointments(response.data.appointments);
+					setAppointments(response.data.appointments);
 				} catch (error) {
 					console.error("Error fetching appointments:", error);
 				}
 			};
-			fetchappointments();
+			fetchAppointments();
 		}
 	}, [isOpen]);
 
@@ -42,7 +42,7 @@ const ViewappointmentModal = ({ isOpen, onClose, size }) => {
 	return (
 		<Modal isOpen={isOpen} onClose={onClose} size={size}>
 			<ModalContent>
-				<ModalHeader>View appointments</ModalHeader>
+				<ModalHeader>View Appointments</ModalHeader>
 				<ModalBody>
 					<Input
 						label="Search"
@@ -50,7 +50,7 @@ const ViewappointmentModal = ({ isOpen, onClose, size }) => {
 						value={searchTerm}
 						onChange={handleSearch}
 					/>
-					<Table aria-label="appointment table">
+					<Table aria-label="Appointment table">
 						<TableHeader>
 							<TableColumn>ID</TableColumn>
 							<TableColumn>Patient</TableColumn>
@@ -60,12 +60,11 @@ const ViewappointmentModal = ({ isOpen, onClose, size }) => {
 						<TableBody emptyContent="No appointments found.">
 							{appointments
 								.filter((appointment) =>
-									appointment.name
-										.toLowerCase()
-										.includes(searchTerm.toLowerCase())
+									appointment.patient.toLowerCase().includes(searchTerm.toLowerCase())
 								)
 								.map((appointment) => (
 									<TableRow key={appointment.id}>
+										<TableCell>{appointment.id}</TableCell>
 										<TableCell>{appointment.patient}</TableCell>
 										<TableCell>{appointment.doctor}</TableCell>
 										<TableCell>{appointment.appointment_date}</TableCell>
@@ -84,4 +83,4 @@ const ViewappointmentModal = ({ isOpen, onClose, size }) => {
 	);
 };
 
-export default ViewappointmentModal;
+export default ViewAppointmentModal;

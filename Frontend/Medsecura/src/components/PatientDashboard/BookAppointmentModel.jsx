@@ -41,9 +41,8 @@ const BookAppointmentModel = ({ isOpen, onClose }) => {
 
 	const handleSubmit = async () => {
 		if (validateForm()) {
-			console.log("Form Data:", formData);
-			// lets make date into a string
-			formData.appointment_date = "hello";
+			// Convert appointment_date to the expected format
+			formData.appointment_date = new Date(formData.appointment_date).toISOString().split('T')[0];
 			try {
 				const response = await axios.post(
 					"http://localhost:3000/auth/add-appointment",
@@ -54,12 +53,13 @@ const BookAppointmentModel = ({ isOpen, onClose }) => {
 				onClose();
 			} catch (error) {
 				console.error("Error:", error);
-				toast.error("An error occurred while adding the doctor. Please try again later.");
+				toast.error("An error occurred while adding the appointment. Please try again later.");
 			}
 		} else {
 			toast.error("Please fill in all required fields correctly.");
 		}
 	};
+	
 
 	const handleChange = (e) => {
 		console.log(formData);

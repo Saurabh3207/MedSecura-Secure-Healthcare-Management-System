@@ -178,32 +178,31 @@ const Patient = sequelize.define(
 );
 // Appointment Model
 const Appointment = sequelize.define(
-	"Appointment",
-	{
-		id: {
-			type: DataTypes.INTEGER,
-			primaryKey: true,
-			autoIncrement: true,
-		},
-		patient: {
-			type: DataTypes.STRING,
-			allowNull: false,
-		},
-		doctor: {
-			type: DataTypes.STRING,
-			allowNull: false,
-		},
+    "Appointment",
+    {
+        id: {
+            type: DataTypes.INTEGER,
+            primaryKey: true,
+            autoIncrement: true,
+        },
+        patient: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        },
+        doctor: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        },
 		appointment_date: {
-			type: DataTypes.STRING,
-			allowNull: false,
-		},
-		createdAt: false, // Disable createdAt field
-		updatedAt: false, // Disable updatedAt field
-	},
-	{
-		tableName: "appointments",
-	}
+			type: DataTypes.DATE,
+		  },
+    },
+    {
+        tableName: "appointments",
+        timestamps: true, // Enable timestamps
+    }
 );
+
 
 module.exports = {
 	Admin,

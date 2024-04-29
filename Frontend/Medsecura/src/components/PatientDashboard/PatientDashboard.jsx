@@ -4,7 +4,7 @@ import { LogoImage } from "../AdminDashboard/logo";
 import { IconLogout } from "@tabler/icons-react";
 import AppointmentIcon from "../Assets/ICONS/appointment.png";
 import ViewDoctorModal from "../AdminDashboard/Modals/Doctor/ViewDoctorModal";
-import ViewDoctor from "../Assets/ICONS/Doctor.png";
+import ViewDoctor from "../Assets/ICONS/doctor.png";
 import BookAppointmentModel from "./BookAppointmentModel";
 import ViewappointmentModal from "../DoctorDashboard/ViewAppointmentModel";
 const PatientDashboard = () => {
