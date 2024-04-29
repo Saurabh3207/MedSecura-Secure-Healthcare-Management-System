@@ -20,7 +20,7 @@ async function createAdmin(email, password) {
 }
 
 // Example usage:
-const adminEmail = 'jadhavjitendra3207@gmail.com';
-const adminPassword = '@Saurabh9833@';
+const adminEmail = 'Jadhavjitendra3207@gmail.com';
+const adminPassword = 'test1234';
 
 createAdmin(adminEmail, adminPassword);

@@ -59,14 +59,16 @@ router.post('/login', limiter, async (req, res) => {
     }
 
     const isPasswordMatch = await bcrypt.compare(password, user.password);
-
+    console.log(isPasswordMatch);
+    console.log(user.password)
+    console.log(password)
     if (!isPasswordMatch) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    const { otp, expirationTime, role } = generateOTP(userType);
+    const { otp, expirationTime } = generateOTP(userType);
 
-    otpStore[email] = { otp, expirationTime, role };
+    otpStore[email] = { otp, expirationTime, role: userType };
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
@@ -77,13 +79,13 @@ router.post('/login', limiter, async (req, res) => {
     
     await sendEmail(mailOptions);
 
-    res.status(200).json({ message: 'OTP sent successfully', email, role });
+    res.status(200).json({ message: 'OTP sent successfully', email, role: userType });
+    
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
-
 
 router.post('/verify-otp', async (req, res) => {
   const { email, otp } = req.body;
@@ -118,8 +120,6 @@ router.post('/verify-otp', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
-
-
 
 router.post('/check-username', [
   body('username').isLength({ min: 5 }).withMessage('Username must be at least 5 characters long')
@@ -209,7 +209,6 @@ router.post('/reset-password', async (req, res) => {
   }
 });
 
-
 router.post('/forgot-password-verify-otp', async (req, res) => {
   const { email, otp } = req.body;
 
@@ -236,55 +235,264 @@ router.post('/forgot-password-verify-otp', async (req, res) => {
 });
 
 router.post('/add-patient', async (req, res) => {
-  const { name, middleName, lastName, dob, gender, email, abhaId, contactNumber, homeAddress, bloodGroup, maritalStatus, occupation, religion, age } = req.body;
+  const details = req.body;
 
   try {
-    // Validate if all required fields are present
-    if (!name || !middleName || !lastName || !dob || !gender || !email || !abhaId || !contactNumber || !occupation || !age) {
-      return res.status(400).json({ error: 'All required fields must be provided' });
+    // Check if patient already exists
+    const patientExists = await Patient.findOne({ where: { email: details.email } });
+    if (patientExists) {
+      return res.status(409).json({ error: 'Patient with this email already exists' });
     }
 
-    // Generate a default password for the patient
-    const defaultPassword = Math.random().toString(36).slice(-8); // Example of generating an 8-character random password
+    // Generate a random password
+    const randomPassword = Math.random().toString(36).slice(-8);
 
-    // Hash the default password
-    const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+    // Hash the random password
+    const hashedPassword = await bcrypt.hash(randomPassword, 10);
 
-    // Create the new patient record in the database
-    const newPatient = await Patient.create({
-      name,
-      middleName,
-      lastName,
-      dob,
-      gender,
-      email,
-      password: hashedPassword, // Store the hashed password in the database
-      abhaId,
-      contactNumber,
-      homeAddress,
-      bloodGroup,
-      maritalStatus,
-      occupation,
-      religion,
-      age
-    });
+    // Add the hashed password to the patient details
+    details.password = hashedPassword;
 
-    // Send an email to the patient with their login credentials
+    // Add patient details to the database
+    const patient = await Patient.create(details);
+
+    // Send email with the temporary password
     const mailOptions = {
       from: process.env.EMAIL_USER,
-      to: email,
-      subject: 'Welcome to Medsecura - Your Login Credentials',
-      text: `Dear ${name},\n\nWelcome to Medsecura!\n\nYour login credentials are as follows:\n\nUsername (Email): ${email}\nPassword: ${defaultPassword}\n\nPlease login to your account using the provided credentials.\n\nBest regards,\nMedsecura Team`
+      to: details.email,
+      subject: 'Welcome to Medsecura!',
+      text: `Dear ${details.name},\n\nWelcome to Medsecura!\n\nYour account has been successfully created. Please use the following credentials to log in to your account:\n\nEmail: ${details.email}\nPassword: ${randomPassword}\n\nPlease remember to change your password after logging in for the first time.\n\nBest regards,\nMedsecura Team`
     };
 
     await sendEmail(mailOptions);
 
-    res.status(200).json({ message: 'Patient added successfully' });
+    res.status(200).json({ message: 'Patient added successfully', patient });
   } catch (error) {
     console.error('Error adding patient:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+
+router.post('/add-doctor',async(req,res)=>{
+  const details = req.body;
+  /* 
+  details = {
+     name: "",
+    email: "",
+    specialty: "",
+    contactNumber: "",
+    address: "",
+    qualification: "",
+}*/
+  try{
+    // check if doctor already exists
+    const doctorExists = await Doctor.findOne({ where: { email: details.email } });
+    if (doctorExists) {
+      return res.status(409).json({ error: 'Doctor with this email already exists' });
+    }
+    randomPassword = Math.random().toString(36).slice(-8);
+    // create default password for the doctor
+    const hashedPassword = await bcrypt.hash(randomPassword, 10);
+    details.password =  hashedPassword;
+    // insert doctor details into the database
+    const doctor = await Doctor.create(details);
+
+    if(!doctor){
+      return res.status(500).json({ error: 'Error adding doctor' });
+    }
+    // send email to the doctor with the default password
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: details.email,
+      subject: 'Welcome to Medsecura!',
+      text: `Dear ${details.name},\n\nWelcome to Medsecura!\n\nYour account has been successfully created. Please use the following credentials to log in to your account:\n\nEmail: ${details.email}\nPassword: ${details.password}\n\nPlease remember to change your password after logging in for the first time.\n\nBest regards,\nMedsecura Team`
+    };
+
+    await sendEmail(mailOptions);
+
+    res.status(200).json({ message: 'Doctor added successfully', doctor });
+
+  }catch(error){
+    console.error('Error adding doctor:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+
+});
+
+
+router.get('/get-patients',async(req,res)=>{
+  try{
+    const patients = await Patient.findAll();
+    // do not return the password field
+    patients.forEach(patient => {
+      delete patient.dataValues.password;
+      delete patient.dataValues.otp;
+    });
+
+    res.status(200).json({ patients });
+  }catch(error){
+    console.error('Error getting patients:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+})
+
+router.get('/get-doctors',async(req,res)=>{
+  try{
+    const doctors = await Doctor.findAll();
+    // do not return the password field
+    doctors.forEach(doctor => {
+      delete doctor.dataValues.password;
+      delete doctor.dataValues.otp;
+    });
+
+    res.status(200).json({ doctors });
+  }catch(error){
+    console.error('Error getting doctors:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+})
+
+router.post('/get-doctor',async(req,res)=>{
+  const { email } = req.body;
+  try{
+    const doctor = await Doctor.findOne({ where: { email } });
+
+    if (!doctor) {
+      return res.status(404).json({ error: 'Doctor not found' });
+    }
+    // do not return the password field
+    delete doctor.dataValues.password;
+    delete doctor.dataValues.otp;
+
+    res.status(200).json({ doctor });
+  }catch(error){
+    console.error('Error getting doctor:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+)
+
+router.post('/get-patient',async(req,res)=>{
+  const { email } = req.body;
+  try{
+    const patient = await Patient.findOne({ where: { email } });
+
+    if (!patient) {
+      return res.status(404).json({ error: 'Patient not found' });
+    }
+    // do not return the password field
+    delete patient.dataValues.password;
+    delete patient.dataValues.otp;
+
+    res.status(200).json({ patient });
+}catch(error){
+  console.error('Error getting patient:', error);
+  res.status(500).json({ error: 'Internal server error' });
+}
+})
+
+router.put('/update-patient',async(req,res)=>{
+
+  const details = req.body;
+  /* 
+  details = {
+    id: 1,
+    email:"xyz@gmail.com"
+    name: "John Doe",
+    middleName: "Smith",
+    lastName: "Doe",
+    dateOfBirth: "1990-01-01",
+})
+*/
+  try{
+    const patient = await Patient.findOne({ where: { email: details.email } });
+
+    if (!patient) {
+      return res.status(404).json({ error: 'Patient not found' });
+    }
+
+    await patient.update(details);
+
+    res.status(200).json({ message: 'Patient updated successfully', patient });
+  }catch(error){
+    console.error('Error updating patient:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+
+
+})
+
+router.put('/update-doctor',async(req,res)=>{
+
+  const details = req.body;
+  /* 
+  details = {
+    id: 1,
+    email:"
+    name: "John Doe",
+    specialty: "Cardiologist",
+    contactNumber: "1234567890",
+    address: "123, Main Street, City, State, Country",
+    qualification: "MBBS, MD"
+})  
+*/
+  try{
+    const doctor = await Doctor.findOne({ where: { email: details.email } });
+
+    if (!doctor) {
+      return res.status(404).json({ error: 'Doctor not found' });
+    }
+
+    await doctor.update(details);
+
+    res.status(200).json({ message: 'Doctor updated successfully', doctor });
+  }catch(error){
+    console.error('Error updating doctor:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+
+})
+ 
+
+router.delete('/delete-patient', async (req, res) => {
+  const { email } = req.body;
+  try {
+    const patient = await Patient.findOne({ where: { email } });
+
+    if (!patient) {
+      return res.status(404).json({ error: 'Patient not found' });
+    }
+
+    await patient.destroy();
+
+    res.status(200).json({ message: 'Patient deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting patient:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
+router.delete('/delete-doctor', async (req, res) => {
+  const { email } = req.body;
+  try {
+    const doctor = await Doctor.findOne({ where: { email } });
+
+    if (!doctor) {
+      return res.status(404).json({ error: 'Doctor not found' });
+    }
+
+    await doctor.destroy();
+
+    res.status(200).json({ message: 'Doctor deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting doctor:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
 
 
 module.exports = router;

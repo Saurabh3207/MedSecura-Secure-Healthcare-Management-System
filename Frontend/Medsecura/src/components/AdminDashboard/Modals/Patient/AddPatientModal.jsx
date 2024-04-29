@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input } from "@nextui-org/react";
 import axios from "axios";
-import { toast, ToastContainer } from "react-toastify";
-
+import { toast } from "react-toastify";
 
 const AddPatientModal = ({ isOpen, onClose, size }) => {
   const [formData, setFormData] = useState({
@@ -13,12 +12,13 @@ const AddPatientModal = ({ isOpen, onClose, size }) => {
     gender: "",
     email: "",
     abhaId: "",
+    contactNumber: "",
     homeAddress: "",
     bloodGroup: "",
-    maritalStatus: "",
+    martialStatus: "",
     occupation: "",
     religion: "",
-    profileImage: null,
+    age: ""
   });
 
   const [errors, setErrors] = useState({});
@@ -53,6 +53,12 @@ const AddPatientModal = ({ isOpen, onClose, size }) => {
     if (!formData.occupation.trim()) {
       newErrors.occupation = "Occupation is required";
     }
+    if (!formData.age.trim()) {
+      newErrors.age = "Age is required";
+    }
+    if (!formData.contactNumber.trim()) {
+      newErrors.contactNumber = "Contact number is required";
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -60,7 +66,22 @@ const AddPatientModal = ({ isOpen, onClose, size }) => {
   const handleSubmit = async () => {
     if (validateForm()) {
       try {
-        const response = await axios.post("http://your_api_endpoint_here", formData);
+        const response = await axios.post("http://localhost:3000/auth/add-patient", {
+          name: formData.name,
+          middleName: formData.middleName,
+          lastName: formData.lastName,
+          dateOfBirth: formData.dob,
+          gender: formData.gender,
+          email: formData.email,
+          ABHAID: formData.abhaId,
+          contactNumber: formData.contactNumber,
+          homeAddress: formData.homeAddress,
+          bloodGroup: formData.bloodGroup,
+          martialStatus: formData. martialStatus,
+          occupation: formData.occupation,
+          Religion: formData.religion,
+          age: formData.age
+        });
         console.log("Response:", response.data);
         toast.success("Patient added successfully!");
         onClose();
@@ -74,16 +95,13 @@ const AddPatientModal = ({ isOpen, onClose, size }) => {
   };
 
   const handleChange = (e) => {
-    if (e.target.name !== "profileImage") {
-      setFormData({ ...formData, [e.target.name]: e.target.value });
-    } else {
-      setFormData({ ...formData, profileImage: e.target.files[0] });
-    }
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleClear = (fieldName) => {
     setFormData({ ...formData, [fieldName]: "" });
   };
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} size={size}>
       <ModalContent>
@@ -185,11 +203,20 @@ const AddPatientModal = ({ isOpen, onClose, size }) => {
                 variant={errors.abhaId ? "bordered" : "default"}
                 onClear={() => handleClear("abhaId")}
               />
-           
+              <Input
+                isClearable
+                label="Contact Number"
+                placeholder="Enter patient's contact number"
+                name="contactNumber"
+                value={formData.contactNumber}
+                onChange={handleChange}
+                errorMessage={errors.contactNumber}
+                variant={errors.contactNumber ? "bordered" : "default"}
+                onClear={() => handleClear("contactNumber")}
+              />
             </div>
             <div className="flex flex-row space-x-4">
               <Input
-                isClearable
                 label="Home Address"
                 placeholder="Enter patient's home address"
                 name="homeAddress"
@@ -199,17 +226,6 @@ const AddPatientModal = ({ isOpen, onClose, size }) => {
                 variant={errors.homeAddress ? "bordered" : "default"}
                 onClear={() => handleClear("homeAddress")}
               />
-              <div className="flex flex-col">
-                <label htmlFor="profileImage">Profile Image</label>
-                <input
-                  type="file"
-                  id="profileImage"
-                  accept="image/*"
-                  name="profileImage"
-                  onChange={handleChange}
-                />
-                {errors.profileImage && <p className="error">{errors.profileImage}</p>}
-              </div>
               <Input
                 label="Blood Group"
                 placeholder="Enter patient's blood group"
@@ -220,21 +236,20 @@ const AddPatientModal = ({ isOpen, onClose, size }) => {
                 variant={errors.bloodGroup ? "bordered" : "default"}
                 onClear={() => handleClear("bloodGroup")}
               />
+           <Input
+  label="Marital Status"
+  placeholder="Enter patient's marital status"
+  name="martialStatus"
+  value={formData.martialStatus}
+  onChange={handleChange}
+  errorMessage={errors.martialStatus}
+  variant={errors.martialStatus ? "bordered" : "default"}
+  onClear={() => handleClear("martialStatus")}
+/>
             </div>
             <div className="flex flex-row space-x-4">
               <Input
-                label="Marital Status"
-                placeholder="Enter patient's marital status"
-                name="maritalStatus"
-                value={formData.maritalStatus}
-                onChange={handleChange}
-                errorMessage={errors.maritalStatus}
-                variant={errors.maritalStatus ? "bordered" : "default"}
-                onClear={() => handleClear("maritalStatus")}
-              />
-              <Input
                 isRequired
-                isClearable
                 label="Occupation"
                 placeholder="Enter patient's occupation"
                 name="occupation"
@@ -253,6 +268,17 @@ const AddPatientModal = ({ isOpen, onClose, size }) => {
                 errorMessage={errors.religion}
                 variant={errors.religion ? "bordered" : "default"}
                 onClear={() => handleClear("religion")}
+              />
+              <Input
+                label="Age"
+                type="number"
+                placeholder="Enter patient's age"
+                name="age"
+                value={formData.age}
+                onChange={handleChange}
+                errorMessage={errors.age}
+                variant={errors.age ? "bordered" : "default"}
+                onClear={() => handleClear("age")}
               />
             </div>
           </div>
