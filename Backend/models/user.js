@@ -178,53 +178,32 @@ const Patient = sequelize.define(
 );
 // Appointment Model
 const Appointment = sequelize.define(
-    "Appointment",
-    {
-        id: {
-            type: DataTypes.INTEGER,
-            primaryKey: true,
-            autoIncrement: true,
-        },
-        patient_id: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-        },
-        doctor_id: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-        },
-        appointment_date: {
-            type: DataTypes.DATE,
-            allowNull: false,
-        },
-        description: {
-            type: DataTypes.TEXT,
-        },
-        next_visit_date: {
-            type: DataTypes.DATE,
-        },
-        status: {
-            type: DataTypes.ENUM("Pending", "Completed"),
-            defaultValue: "Pending",
-        },
-        created_at: {
-            type: DataTypes.DATE,
-            allowNull: false,
-            defaultValue: DataTypes.NOW,
-        },
-        updated_at: {
-            type: DataTypes.DATE,
-            allowNull: false,
-            defaultValue: DataTypes.NOW,
-        },
-    },
-    {
-        tableName: "appointments",
-        timestamps: true, // This option automatically adds createdAt and updatedAt fields
-        underscored: true, // This option converts camelCase column names to snake_case
-    }
+	"Appointment",
+	{
+		id: {
+			type: DataTypes.INTEGER,
+			primaryKey: true,
+			autoIncrement: true,
+		},
+		patient: {
+			type: DataTypes.STRING,
+			allowNull: false,
+		},
+		doctor: {
+			type: DataTypes.STRING,
+			allowNull: false,
+		},
+		appointment_date: {
+			type: DataTypes.STRING,
+			allowNull: false,
+		},
+		createdAt: false, // Disable createdAt field
+		updatedAt: false, // Disable updatedAt field
+	},
+	{
+		tableName: "appointments",
+	}
 );
-
 
 module.exports = {
 	Admin,
